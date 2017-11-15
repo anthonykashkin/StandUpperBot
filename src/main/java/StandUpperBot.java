@@ -15,14 +15,14 @@ public class StandUpperBot extends TelegramLongPollingBot {
     public StandUpperBot() {
         super();
         Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 17);
-        today.set(Calendar.MINUTE, 50);
+        today.set(Calendar.HOUR_OF_DAY, 18);
+        today.set(Calendar.MINUTE, 24);
         today.set(Calendar.SECOND, 0);
 
         TimerTask standUp = new TimerTask() {
             @Override
             public void run() {
-                if (dayIsOk()){
+                if (dayIsOk()) {
                     sendMsg("Stand Up");
                 }
             }
@@ -44,11 +44,20 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.getMessage().getText().equals("stop")) {
+        if (Objects.equals(update.getMessage().getText(), "stop")) {
             chatIds.remove(update.getMessage().getChatId());
-        } else {
+            BotLogger.info(LOGTAG, update.toString());
+        } else if ((Objects.equals(update.getMessage().getText(), "start"))) {
             chatIds.add(update.getMessage().getChatId());
+            BotLogger.info(LOGTAG, update.toString());
+        } else if (update.getMessage() != null && update.getMessage().getChat().isGroupChat() || update.getMessage().getChat().isSuperGroupChat()) {
+            chatIds.add(update.getMessage().getChatId());
+        } else {
+            BotLogger.info(LOGTAG, update.toString());
         }
+
+        chatIds.forEach(chatId ->
+                BotLogger.info(LOGTAG, chatId.toString()));
     }
 
     public void sendMsg(String text) {
@@ -65,14 +74,13 @@ public class StandUpperBot extends TelegramLongPollingBot {
         });
     }
 
-
     private boolean dayIsOk() {
         Calendar calendar = Calendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
 
-        if (day == 2 || day == 3 || day == 4 || day == 5 ) {
+        if (day == 2 || day == 3 || day == 4 || day == 5) {
             return true;
-        }else {
+        } else {
             return false;
         }
     }
