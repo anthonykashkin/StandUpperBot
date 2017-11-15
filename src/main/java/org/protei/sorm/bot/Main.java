@@ -1,3 +1,5 @@
+package org.protei.sorm.bot;
+
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -5,7 +7,6 @@ import org.telegram.telegrambots.logging.BotLogger;
 import org.telegram.telegrambots.logging.BotsFileHandler;
 
 import java.io.IOException;
-import java.util.TimerTask;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 

@@ -1,3 +1,5 @@
+package org.protei.sorm.bot;
+
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -8,15 +10,15 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class StandUpperBot extends TelegramLongPollingBot {
-    private static final String LOGTAG = "StandUpperBot";
+    private static final String LOGTAG = "org.protei.sorm.bot.StandUpperBot";
 
     final static Set<Long> chatIds = new HashSet<>();
 
     public StandUpperBot() {
         super();
         Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 18);
-        today.set(Calendar.MINUTE, 24);
+        today.set(Calendar.HOUR_OF_DAY, 12);
+        today.set(Calendar.MINUTE, 45);
         today.set(Calendar.SECOND, 0);
 
         TimerTask standUp = new TimerTask() {
@@ -34,7 +36,7 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "StandUpperBot";
+        return "org.protei.sorm.bot.StandUpperBot";
     }
 
     @Override
