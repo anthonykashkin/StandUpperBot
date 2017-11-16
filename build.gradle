@@ -1,10 +1,19 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.github.jengelman.gradle.plugins:shadow:2.0.1"
+    }
+}
+
 group 'org.protei.sorm.bot'
-version '1.0.2'
+version '1.0.3'
 
 apply plugin: 'java'
-apply plugin: 'application'
-
-mainClassName = 'org.protei.sorm.bot.Main'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 sourceCompatibility = 1.8
 
@@ -21,3 +30,47 @@ dependencies {
     )
 
 }
+
+task fatJar(type: Jar) {
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+    manifest {
+        attributes (
+                "Built-By": "anthonykashkin",
+                'Implementation-Title': 'Stand Upper Bot',
+                'Implementation-Version': version,
+                'Main-Class': 'com.organization.project.package.mainClassName',
+        )
+    }
+}
+
+shadowJar {
+    destinationDir = file("$buildDir/dist")
+
+    manifest {
+        attributes(
+                "Built-By": "anthonykashkin",
+                "Main-Class": 'org.protei.sorm.bot.Main',
+                "Created-By": "gradle ${gradle.gradleVersion}, jdk ${System.getProperty("java.version")}",
+                "Specification-Title": project.name,
+                "Implementation-Title": "Stand Up Bot"
+        )
+    }
+    classifier = "fatjar"
+}
+
+task copyScripts(type: Copy, dependsOn: 'shadowJar') {
+    into "$buildDir/dist"
+    from "env"
+}
+
+task buildDist(type: Tar, dependsOn: 'copyScripts') {
+    File file = new File("$buildDir/distribution")
+    file.mkdir()
+    destinationDir = file
+    compression = Compression.GZIP
+    from "$buildDir/dist"
+}
+
+build.dependsOn 'buildDist'

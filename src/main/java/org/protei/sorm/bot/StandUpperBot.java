@@ -14,12 +14,15 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     final static Set<Long> chatIds = new HashSet<>();
 
+    Configuration config;
+
     public StandUpperBot() {
         super();
+        config = Configuration.getConfig();
         Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, 12);
-        today.set(Calendar.MINUTE, 45);
-        today.set(Calendar.SECOND, 0);
+        today.set(Calendar.HOUR_OF_DAY, config.getHours());
+        today.set(Calendar.MINUTE, config.getMinutes());
+        today.set(Calendar.SECOND, config.getSeconds());
 
         TimerTask standUp = new TimerTask() {
             @Override
@@ -41,7 +44,7 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "TOKEN";
+        return "";
     }
 
     @Override
@@ -80,8 +83,8 @@ public class StandUpperBot extends TelegramLongPollingBot {
         Calendar calendar = Calendar.getInstance();
         int day = calendar.get(Calendar.DAY_OF_WEEK);
 
-        if (day == 2 || day == 3 || day == 4 || day == 5) {
-            return true;
+        if (config != null) {
+            return config.getDaysOfWeek().stream().anyMatch(s -> s.equals(day));
         } else {
             return false;
         }
