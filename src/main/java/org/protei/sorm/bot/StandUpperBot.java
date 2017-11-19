@@ -85,10 +85,10 @@ public class StandUpperBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         if (Objects.equals(update.getMessage().getText(), Commands.cancelCommand)) {
-            chatIds.remove(update.getMessage().getChatId());
+            removeChat(update.getMessage().getChatId());
             LOGGER.log(Level.INFO, "Received command CANCEL from: " + update.getMessage().getContact());
         } else if ((Objects.equals(update.getMessage().getText(), Commands.startCommand))) {
-            chatIds.add(update.getMessage().getChatId());
+            addChat(update.getMessage().getChatId());
             LOGGER.log(Level.INFO, "Received command START from: " + update.getMessage().getContact());
         } else if ((Objects.equals(update.getMessage().getText(), Commands.update))) {
             ConfigurationDateTime tmp = config;
@@ -109,6 +109,22 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
         chatIds.forEach(chatId ->
                 BotLogger.info(LOGTAG, chatId.toString()));
+    }
+
+    private void removeChat(Long chatId) {
+        chatIds.remove(chatId);
+
+        File find = new File("./chatIds.txt");
+        if (find.exists()) {
+            try (Stream<String> stream = Files.lines(Paths.get(find.getPath()))) {
+                stream.forEach(id -> chatIds.add(Long.parseLong(id)));
+                chatIdsFile = find;
+            } catch (IOException e) {
+                LOGGER.log(Level.CONFIG, "Can not read file with ids.", e);
+            }
+        } else {
+            LOGGER.log(Level.SEVERE, "Can not find file with ids.");
+        }
     }
 
     private void updateConfig() {
