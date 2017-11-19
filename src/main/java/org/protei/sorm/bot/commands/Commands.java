@@ -1,4 +1,4 @@
-package org.protei.sorm.bot;
+package org.protei.sorm.bot.commands;
 
 public class Commands {
     public static final String commandInitChar = "/";
@@ -7,5 +7,5 @@ public class Commands {
     /// Cancel command
     public static final String cancelCommand = commandInitChar + "cancel";
     /// Upload command
-    public static final String uploadCommand = commandInitChar + "upload";
+    public static final String update = commandInitChar + "update";
 }

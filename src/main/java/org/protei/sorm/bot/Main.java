@@ -3,36 +3,25 @@ package org.protei.sorm.bot;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
-import org.telegram.telegrambots.logging.BotLogger;
-import org.telegram.telegrambots.logging.BotsFileHandler;
 
-import java.io.IOException;
-import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
     private static final String LOGTAG = "MAIN";
+    private static final Logger LOGGER = Logger.getLogger(LOGTAG);
 
     public static void main(String[] args) {
-        BotLogger.setLevel(Level.ALL);
-        BotLogger.registerLogger(new ConsoleHandler());
-
-        try {
-            BotLogger.registerLogger(new BotsFileHandler());
-        } catch (IOException e) {
-            BotLogger.severe(LOGTAG, e);
-        }
-
         try {
             ApiContextInitializer.init();
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
             try {
                 telegramBotsApi.registerBot(new StandUpperBot());
             } catch (TelegramApiException e) {
-                BotLogger.error(LOGTAG, e);
+                LOGGER.log(Level.ALL, "Can not register bot", e);
             }
         } catch (Exception e) {
-            BotLogger.error(LOGTAG, e);
+            LOGGER.log(Level.ALL, "Can not initialize context", e);
         }
     }
 }

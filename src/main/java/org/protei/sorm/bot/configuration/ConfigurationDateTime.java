@@ -1,6 +1,4 @@
-package org.protei.sorm.bot;
-
-import org.telegram.telegrambots.logging.BotLogger;
+package org.protei.sorm.bot.configuration;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -9,9 +7,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class Configuration {
-    private static final String LOGTAG = "org.protei.sorm.bot.Configuration";
+public class ConfigurationDateTime {
+    private static final String LOGTAG = "org.protei.sorm.bot.configuration.ConfigurationDateTime";
+    private static final Logger LOGGER = Logger.getLogger(LOGTAG);
     private static final String propFilePath = System.getProperty("user.home") + "/.standupper/timing.xml";
     private final static Properties properties = new Properties();
     private int hours;
@@ -19,14 +20,14 @@ public class Configuration {
     private int seconds;
     private List<Integer> daysOfWeek;
 
-    private Configuration(int hours, int minutes, int seconds, List<Integer> daysOfWeek) {
+    private ConfigurationDateTime(int hours, int minutes, int seconds, List<Integer> daysOfWeek) {
         this.hours = hours;
         this.minutes = minutes;
         this.seconds = seconds;
         this.daysOfWeek = daysOfWeek;
     }
 
-    public static Configuration getConfig() {
+    public static ConfigurationDateTime getConfig() {
         try {
             File file = new File(propFilePath);
 
@@ -37,7 +38,7 @@ public class Configuration {
             try (InputStream inputStream = new FileInputStream(file)) {
                 properties.load(inputStream);
             } catch (IOException e) {
-                BotLogger.error(LOGTAG, e);
+                LOGGER.log(Level.ALL, "Can not load config file. ", e);
             }
 
             Integer hours = Integer.valueOf(properties.getProperty("hours"));
@@ -47,9 +48,9 @@ public class Configuration {
             for (String s : properties.getProperty("daysOfWeak").split("\\,")) {
                 daysOfWeek.add(Integer.valueOf(s));
             }
-            return new Configuration(hours, minutes, seconds, daysOfWeek);
+            return new ConfigurationDateTime(hours, minutes, seconds, daysOfWeek);
         } catch (Exception e) {
-            BotLogger.severe(LOGTAG, e);
+            LOGGER.log(Level.ALL, "Can not read config file. ", e);
             return null;
         }
     }

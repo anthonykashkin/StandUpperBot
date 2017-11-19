@@ -1,0 +1,10 @@
+# Package Files #
+*.jar
+
+### IDE files
+.idea/
+copyright/
+*.iml
+
+### TOKEN FILE
+token.properties
