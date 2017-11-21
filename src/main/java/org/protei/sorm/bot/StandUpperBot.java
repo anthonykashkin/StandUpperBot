@@ -13,44 +13,40 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.Calendar;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
+
 public class StandUpperBot extends TelegramLongPollingBot {
-    final static ConcurrentLinkedDeque<Long> chatIds = new ConcurrentLinkedDeque<>();
+    public static final String CHAT_IDS_FILENAME = System.getProperty("user.home") + "/.standupper/chatIds.txt";
     private static final Logger LOGGER = LoggerFactory.getLogger(StandUpperBot.class);
+    final static ConcurrentSkipListSet<Long> chatIds = new ConcurrentSkipListSet<>();
 
     private static ConfigurationDateTime config;
 
     private File chatIdsFile;
+    private TimerTask standUp;
 
-    private TimerTask standUp = new TimerTask() {
-        @Override
-        public void run() {
-            Calendar calendar = Calendar.getInstance();
-            if (dayIsOk()) {
-                if (calendar.get(Calendar.HOUR) == config.getHours() &&
-                        calendar.get(Calendar.MINUTE) == config.getMinutes() &&
-                        calendar.get(Calendar.SECOND) == config.getSeconds()) {
-                    sendNotification("Stand Up");
-                }
-            }
-        }
-    };
+    private Timer timer = new Timer();
 
-    private static Timer timer = new Timer();
+    volatile private Boolean forUser;
 
     public StandUpperBot() {
         super();
         initChatIdsFile();
         config = ConfigurationDateTime.getConfig();
-        timer.schedule(standUp, 1000);
+        reconfig();
+        forUser = true;
     }
 
     private void initChatIdsFile() {
-        File find = new File("./chatIds.txt");
+
+        File find = new File(CHAT_IDS_FILENAME);
         if (find.exists()) {
             try (Stream<String> stream = Files.lines(Paths.get(find.getPath()))) {
                 stream.forEach(id -> chatIds.add(Long.parseLong(id)));
@@ -63,7 +59,7 @@ public class StandUpperBot extends TelegramLongPollingBot {
                 Path path = Paths.get(find.getPath());
                 Files.createDirectories(path.getParent());
                 Path filePath = Files.createFile(path);
-                chatIdsFile = Files.createFile(filePath).toFile();
+                chatIdsFile = filePath.toFile();
             } catch (Exception ex) {
                 LOGGER.error("Can not create file with chat ids", ex);
             }
@@ -77,15 +73,6 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        /*
-        try (InputStream inputStream = new FileInputStream("org.protei.sorm.bot/token.properties")) {
-            Properties properties = new Properties();
-            properties.load(inputStream);
-            return properties.getProperty("token");
-        } catch (IOException io) {
-            LOGGER.error( "Can not get token. ", io);
-            return "";
-        }*/
         return "";
     }
 
@@ -93,70 +80,105 @@ public class StandUpperBot extends TelegramLongPollingBot {
     public void onUpdateReceived(Update update) {
         if (Objects.equals(update.getMessage().getText(), Commands.cancelCommand)) {
             removeChat(update.getMessage().getChatId());
-            LOGGER.info( "Received command CANCEL from: " + update.getMessage().getFrom());
+            LOGGER.info("Received command CANCEL from: " + update.getMessage().getFrom());
+            sendNotification("Ваш чат удален из рассылки", update.getMessage().getChatId());
         } else if ((Objects.equals(update.getMessage().getText(), Commands.startCommand))) {
             addChat(update.getMessage().getChatId());
-            LOGGER.info( "Received command START from: " + update.getMessage().getFrom());
+            reconfig();
+            LOGGER.info("Received command START from: " + update.getMessage().getFrom());
+            sendNotification("Ваш чат добавлен в рассылку", update.getMessage().getChatId());
+            forUser = true;
         } else if ((Objects.equals(update.getMessage().getText(), Commands.update))) {
             ConfigurationDateTime tmp = config;
             try {
-                config = ConfigurationDateTime.getConfig();
-                LOGGER.info( "Received command UPDATE from: " + update.getMessage().getFrom());
+                reconfig();
+                sendNotificationForAll("Время обновлено. Теперь уведомление придет в : "
+                        + config.getTime().getHours() + ':'
+                        + config.getTime().getMinutes()
+                        + ':' + config.getTime().getSeconds() + '\n' +
+                        "Текущее время : " + Calendar.getInstance().getTime()
+                );
+                LOGGER.info("Received command UPDATE from: " + update.getMessage().getFrom());
+                forUser = true;
             } catch (Exception ex) {
                 config = tmp;
-                LOGGER.error( "On update config. ", ex);
+                LOGGER.error("On reconfig config. ", ex);
             }
         } else if (update.getMessage() != null && update.getMessage().getChat().isGroupChat() || update.getMessage().getChat().isSuperGroupChat()) {
             Long chatId = update.getMessage().getChatId();
             addChat(chatId);
-            LOGGER.info( "Try to add chat with id: " + chatId);
+            LOGGER.info("Try to add chat with id: " + chatId);
         } else {
-            LOGGER.info( "Something is happened: " + update);
+            LOGGER.info("Something is happened: " + update);
         }
     }
 
-    private void removeChat(Long chatId) {
-        chatIds.remove(chatId);
+    private void reconfig() {
+        forUser = false;
 
-        File find = new File("./chatIds.txt");
+        config = ConfigurationDateTime.getConfig();
+        if (standUp != null) {
+            standUp.cancel();
+        }
+        timer.purge();
+
+
+        standUp = new TimerTask() {
+            @Override
+            public void run() {
+                if (dayIsOk() && forUser) {
+                    sendNotificationForAll("Stand Up");
+                }
+            }
+        };
+        timer.schedule(standUp, config.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
+
+    }
+
+    private synchronized void removeChat(Long chatId) {
+        if (chatIds.remove(chatId)) {
+            rewriteFile(chatId);
+        }
+    }
+
+    private synchronized void addChat(Long chatId) {
+        if (chatIds.add(chatId)) {
+            rewriteFile(chatId);
+        }
+    }
+
+    private void rewriteFile(Long chatId) {
+        File find = new File(CHAT_IDS_FILENAME);
         if (find.exists()) {
-            try (Stream<String> stream = Files.lines(Paths.get(find.getPath()))) {
-                stream.forEach(id -> chatIds.add(Long.parseLong(id)));
-                chatIdsFile = find;
-            } catch (IOException e) {
-                LOGGER.warn("Can not read file with ids.", e);
+            try (OutputStream out = new FileOutputStream(chatIdsFile)) {
+                PrintStream printStream = new PrintStream(out);
+                chatIds.forEach(printStream::println);
+                printStream.println(chatId);
+                LOGGER.info("Chat with id : " + chatId + " was added.");
+            } catch (Exception ex) {
+                LOGGER.error("Can not find file or write to file: " + chatIdsFile, ex);
             }
         } else {
-            LOGGER.warn( "Can not find file with ids.");
-        }
-    }
-
-    public void addChat(Long chatId) {
-        chatIds.add(chatId);
-
-        try (OutputStream out = new FileOutputStream(chatIdsFile)) {
-            PrintStream printStream = new PrintStream(out);
-            printStream.println(chatId);
-            LOGGER.info("Chat with id : " + chatId + " was added.");
-        } catch (Exception ex) {
-            LOGGER.error( "Can not find file or write to file: " + chatIdsFile, ex);
+            LOGGER.error("File with ids not exist.");
         }
 
     }
 
-    public void sendNotification(String text) {
-        chatIds.forEach(s -> {
-            SendMessage sendMessage = new SendMessage();
-            sendMessage.enableMarkdown(true);
-            sendMessage.setChatId(s);
-            sendMessage.setText(text);
-            try {
-                sendMessage(sendMessage);
-                LOGGER.info( "Message with text: \"" + text + "\" was send to chat with id: " + s);
-            } catch (TelegramApiException e) {
-                LOGGER.error( "Can not send message", e);
-            }
-        });
+    private void sendNotificationForAll(String text) {
+        chatIds.forEach(s -> sendNotification(text, s));
+    }
+
+    private void sendNotification(String text, Long chatId) {
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.enableMarkdown(true);
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(text);
+        try {
+            sendMessage(sendMessage);
+            LOGGER.info("Message with text: \"" + text + "\" was send to chat with id: " + chatId);
+        } catch (TelegramApiException e) {
+            LOGGER.error("Can not send message", e);
+        }
     }
 
     synchronized private boolean dayIsOk() {

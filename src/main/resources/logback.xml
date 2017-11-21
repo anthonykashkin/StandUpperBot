@@ -1,32 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration>
-<!--Аппендеры -->
-<!--Файловый аппендер -->
-<appender name="file" class="ch.qos.logback.core.FileAppender">
-<file>log.log</file>
-<layout class="ch.qos.logback.classic.PatternLayout">
-<Pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</Pattern>
-</layout>
-</appender>
-<!--Консольный аппендер -->
-<appender name="sout" class="ch.qos.logback.core.ConsoleAppender">
-<layout class="ch.qos.logback.classic.PatternLayout">
-<Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
-</layout>
-</appender>
-<!-- Фильтры -->
-<!-- Фильтр по маркеру -->
-<turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
-<Marker>marker</Marker>
-<OnMatch>DENY</OnMatch>
-</turboFilter>
-<!-- Логгеры -->
-<!-- Корневой логгер -->
-<root level="info">
-<appender-ref ref="file" />
-</root>
-<!-- Логгер нашего класса  -->
-<logger name="logging.logback.LoggingLogback" level="info" >
-<appender-ref ref="sout" />
-</logger>
+<configuration scan="true" scanPeriod="30 seconds">
+    <property file="youtrack-bot.properties"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%-5level %logger{0} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <file>${log.path}/standup.log</file>
+
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%date %-5level %logger{0} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="ru.protei.youtrack.tgbot" level="debug"/>
+
+    <root level="info">
+        <appender-ref ref="file"/>
+        <appender-ref ref="console"/>
+    </root>
 </configuration>

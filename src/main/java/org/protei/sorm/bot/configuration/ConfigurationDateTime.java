@@ -6,9 +6,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class ConfigurationDateTime {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ConfigurationDateTime.class);
@@ -56,7 +54,7 @@ public class ConfigurationDateTime {
 
     private static void writeDefaultConfig(File file) throws IOException {
         String config = new String("hours=12\n" +
-                "minutes=45\n" +
+                "minutes=44\n" +
                 "seconds=0\n" +
                 "daysOfWeak=2,3,4,5");
         Path path = Paths.get(propFilePath);
@@ -69,19 +67,15 @@ public class ConfigurationDateTime {
         }
     }
 
-    public int getHours() {
-        return hours;
-    }
-
-    public int getMinutes() {
-        return minutes;
-    }
-
-    public int getSeconds() {
-        return seconds;
-    }
-
     public List<Integer> getDaysOfWeek() {
         return daysOfWeek;
+    }
+
+    public Date getTime() {
+        Calendar dateTime = Calendar.getInstance();
+        dateTime.set(Calendar.HOUR_OF_DAY, hours);
+        dateTime.set(Calendar.MINUTE, minutes);
+        dateTime.set(Calendar.SECOND, seconds);
+        return dateTime.getTime();
     }
 }
