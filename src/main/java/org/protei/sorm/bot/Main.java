@@ -1,15 +1,14 @@
 package org.protei.sorm.bot;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Main {
-    private static final String LOGTAG = "MAIN";
-    private static final Logger LOGGER = Logger.getLogger(LOGTAG);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     public static void main(String[] args) {
         try {
@@ -18,10 +17,10 @@ public class Main {
             try {
                 telegramBotsApi.registerBot(new StandUpperBot());
             } catch (TelegramApiException e) {
-                LOGGER.log(Level.ALL, "Can not register bot", e);
+                LOGGER.error( "Can not register bot", e);
             }
         } catch (Exception e) {
-            LOGGER.log(Level.ALL, "Can not initialize context", e);
+            LOGGER.error( "Can not initialize context", e);
         }
     }
 }

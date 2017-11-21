@@ -1,5 +1,7 @@
 package org.protei.sorm.bot.configuration;
 
+import org.slf4j.LoggerFactory;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,13 +9,10 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class ConfigurationDateTime {
-    private static final String LOGTAG = "org.protei.sorm.bot.configuration.ConfigurationDateTime";
-    private static final Logger LOGGER = Logger.getLogger(LOGTAG);
-    private static final String propFilePath = System.getProperty("user.home") + "/.standupper/timing.xml";
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ConfigurationDateTime.class);
+    private static final String propFilePath = System.getProperty("user.home") + "/.standupper/timing.properties";
     private final static Properties properties = new Properties();
     private int hours;
     private int minutes;
@@ -38,7 +37,7 @@ public class ConfigurationDateTime {
             try (InputStream inputStream = new FileInputStream(file)) {
                 properties.load(inputStream);
             } catch (IOException e) {
-                LOGGER.log(Level.ALL, "Can not load config file. ", e);
+                LOGGER.error( "Can not load config file. ", e);
             }
 
             Integer hours = Integer.valueOf(properties.getProperty("hours"));
@@ -50,7 +49,7 @@ public class ConfigurationDateTime {
             }
             return new ConfigurationDateTime(hours, minutes, seconds, daysOfWeek);
         } catch (Exception e) {
-            LOGGER.log(Level.ALL, "Can not read config file. ", e);
+            LOGGER.error( "Can not read config file. ", e);
             return null;
         }
     }

@@ -2,11 +2,12 @@ package org.protei.sorm.bot;
 
 import org.protei.sorm.bot.commands.Commands;
 import org.protei.sorm.bot.configuration.ConfigurationDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
-import org.telegram.telegrambots.logging.BotLogger;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -15,33 +16,37 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 public class StandUpperBot extends TelegramLongPollingBot {
     final static ConcurrentLinkedDeque<Long> chatIds = new ConcurrentLinkedDeque<>();
-    private static final String LOGTAG = "org.protei.sorm.bot.StandUpperBot";
-    private static final Logger LOGGER = Logger.getLogger(LOGTAG);
-    private ConfigurationDateTime config;
+    private static final Logger LOGGER = LoggerFactory.getLogger(StandUpperBot.class);
+
+    private static ConfigurationDateTime config;
 
     private File chatIdsFile;
 
     private TimerTask standUp = new TimerTask() {
         @Override
         public void run() {
+            Calendar calendar = Calendar.getInstance();
             if (dayIsOk()) {
-                sendMsg("Stand Up");
+                if (calendar.get(Calendar.HOUR) == config.getHours() &&
+                        calendar.get(Calendar.MINUTE) == config.getMinutes() &&
+                        calendar.get(Calendar.SECOND) == config.getSeconds()) {
+                    sendNotification("Stand Up");
+                }
             }
         }
     };
 
-    private Timer timer = new Timer();
+    private static Timer timer = new Timer();
 
     public StandUpperBot() {
         super();
         initChatIdsFile();
-        updateConfig();
+        config = ConfigurationDateTime.getConfig();
+        timer.schedule(standUp, 1000);
     }
 
     private void initChatIdsFile() {
@@ -51,7 +56,7 @@ public class StandUpperBot extends TelegramLongPollingBot {
                 stream.forEach(id -> chatIds.add(Long.parseLong(id)));
                 chatIdsFile = find;
             } catch (IOException e) {
-                LOGGER.log(Level.CONFIG, "Can not read file with ids.", e);
+                LOGGER.warn("Can not read file with ids.", e);
             }
         } else {
             try {
@@ -60,7 +65,7 @@ public class StandUpperBot extends TelegramLongPollingBot {
                 Path filePath = Files.createFile(path);
                 chatIdsFile = Files.createFile(filePath).toFile();
             } catch (Exception ex) {
-                LOGGER.log(Level.ALL, "Can not create file with chat ids");
+                LOGGER.error("Can not create file with chat ids", ex);
             }
         }
     }
@@ -72,43 +77,42 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        try (InputStream inputStream = new FileInputStream("token.properties")) {
+        /*
+        try (InputStream inputStream = new FileInputStream("org.protei.sorm.bot/token.properties")) {
             Properties properties = new Properties();
             properties.load(inputStream);
             return properties.getProperty("token");
         } catch (IOException io) {
-            LOGGER.log(Level.ALL, "Can not get token. ", io);
+            LOGGER.error( "Can not get token. ", io);
             return "";
-        }
+        }*/
+        return "";
     }
 
     @Override
     public void onUpdateReceived(Update update) {
         if (Objects.equals(update.getMessage().getText(), Commands.cancelCommand)) {
             removeChat(update.getMessage().getChatId());
-            LOGGER.log(Level.INFO, "Received command CANCEL from: " + update.getMessage().getContact());
+            LOGGER.info( "Received command CANCEL from: " + update.getMessage().getFrom());
         } else if ((Objects.equals(update.getMessage().getText(), Commands.startCommand))) {
             addChat(update.getMessage().getChatId());
-            LOGGER.log(Level.INFO, "Received command START from: " + update.getMessage().getContact());
+            LOGGER.info( "Received command START from: " + update.getMessage().getFrom());
         } else if ((Objects.equals(update.getMessage().getText(), Commands.update))) {
             ConfigurationDateTime tmp = config;
             try {
-                updateConfig();
+                config = ConfigurationDateTime.getConfig();
+                LOGGER.info( "Received command UPDATE from: " + update.getMessage().getFrom());
             } catch (Exception ex) {
                 config = tmp;
-                LOGGER.log(Level.SEVERE, "Error hapend", ex);
+                LOGGER.error( "On update config. ", ex);
             }
-            LOGGER.log(Level.INFO, "Received command UPDATE from: " + update.getMessage().getContact());
         } else if (update.getMessage() != null && update.getMessage().getChat().isGroupChat() || update.getMessage().getChat().isSuperGroupChat()) {
             Long chatId = update.getMessage().getChatId();
             addChat(chatId);
-            LOGGER.log(Level.INFO, "Try to add chat with id: " + chatId);
+            LOGGER.info( "Try to add chat with id: " + chatId);
         } else {
-            LOGGER.log(Level.INFO, "Something is happened: " + update);
+            LOGGER.info( "Something is happened: " + update);
         }
-
-        chatIds.forEach(chatId ->
-                BotLogger.info(LOGTAG, chatId.toString()));
     }
 
     private void removeChat(Long chatId) {
@@ -120,22 +124,11 @@ public class StandUpperBot extends TelegramLongPollingBot {
                 stream.forEach(id -> chatIds.add(Long.parseLong(id)));
                 chatIdsFile = find;
             } catch (IOException e) {
-                LOGGER.log(Level.CONFIG, "Can not read file with ids.", e);
+                LOGGER.warn("Can not read file with ids.", e);
             }
         } else {
-            LOGGER.log(Level.SEVERE, "Can not find file with ids.");
+            LOGGER.warn( "Can not find file with ids.");
         }
-    }
-
-    private void updateConfig() {
-        config = ConfigurationDateTime.getConfig();
-        Calendar today = Calendar.getInstance();
-        today.set(Calendar.HOUR_OF_DAY, config.getHours());
-        today.set(Calendar.MINUTE, config.getMinutes());
-        today.set(Calendar.SECOND, config.getSeconds());
-
-        timer.cancel();
-        timer.schedule(standUp, today.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
     }
 
     public void addChat(Long chatId) {
@@ -144,14 +137,14 @@ public class StandUpperBot extends TelegramLongPollingBot {
         try (OutputStream out = new FileOutputStream(chatIdsFile)) {
             PrintStream printStream = new PrintStream(out);
             printStream.println(chatId);
-            LOGGER.log(Level.INFO, "Chat with id : " + chatId + " was added.");
+            LOGGER.info("Chat with id : " + chatId + " was added.");
         } catch (Exception ex) {
-            LOGGER.log(Level.ALL, "Can not find file or write to file: " + chatIdsFile, ex);
+            LOGGER.error( "Can not find file or write to file: " + chatIdsFile, ex);
         }
 
     }
 
-    public void sendMsg(String text) {
+    public void sendNotification(String text) {
         chatIds.forEach(s -> {
             SendMessage sendMessage = new SendMessage();
             sendMessage.enableMarkdown(true);
@@ -159,9 +152,9 @@ public class StandUpperBot extends TelegramLongPollingBot {
             sendMessage.setText(text);
             try {
                 sendMessage(sendMessage);
-                LOGGER.log(Level.ALL, "Message with text: \"" + text + "\" was send to chat with id: " + s);
+                LOGGER.info( "Message with text: \"" + text + "\" was send to chat with id: " + s);
             } catch (TelegramApiException e) {
-                LOGGER.log(Level.ALL, "Can not send message", e);
+                LOGGER.error( "Can not send message", e);
             }
         });
     }

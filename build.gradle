@@ -26,9 +26,7 @@ dependencies {
             [group: 'org.telegram', name: 'telegrambots', version: '3.5'],
 
             //Logger
-            [group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.6'],
-            [group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.16'],
-            [group: 'log4j', name: 'log4j', version: '1.2.17']
+            [group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.6']
     )
 
     testCompile(
