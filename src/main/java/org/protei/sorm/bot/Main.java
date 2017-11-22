@@ -16,9 +16,11 @@ public class Main {
             TelegramBotsApi telegramBotsApi = new TelegramBotsApi();
             try {
                 telegramBotsApi.registerBot(new StandUpperBot());
+                LOGGER.info("StandUpperBot registered.");
             } catch (TelegramApiException e) {
                 LOGGER.error( "Can not register bot", e);
             }
+            LOGGER.info("Context initialized.");
         } catch (Exception e) {
             LOGGER.error( "Can not initialize context", e);
         }

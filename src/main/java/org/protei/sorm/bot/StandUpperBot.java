@@ -1,10 +1,11 @@
 package org.protei.sorm.bot;
 
 import org.protei.sorm.bot.commands.Commands;
-import org.protei.sorm.bot.configuration.ConfigurationDateTime;
+import org.protei.sorm.bot.configuration.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
+import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -27,21 +28,21 @@ public class StandUpperBot extends TelegramLongPollingBot {
     private static final Logger LOGGER = LoggerFactory.getLogger(StandUpperBot.class);
     final static ConcurrentSkipListSet<Long> chatIds = new ConcurrentSkipListSet<>();
 
-    private static ConfigurationDateTime config;
+    private static Configuration config;
 
     private File chatIdsFile;
     private TimerTask standUp;
 
     private Timer timer = new Timer();
 
-    volatile private Boolean forUser;
+    private volatile Boolean forUser;
 
     public StandUpperBot() {
         super();
         initChatIdsFile();
-        config = ConfigurationDateTime.getConfig();
-        reconfig();
+        update();
         forUser = true;
+        LOGGER.info("StandUpperBot created.");
     }
 
     private void initChatIdsFile() {
@@ -73,50 +74,46 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "";
+        return config.getToken();
     }
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (Objects.equals(update.getMessage().getText(), Commands.cancelCommand)) {
-            removeChat(update.getMessage().getChatId());
-            LOGGER.info("Received command CANCEL from: " + update.getMessage().getFrom());
-            sendNotification("Ваш чат удален из рассылки", update.getMessage().getChatId());
-        } else if ((Objects.equals(update.getMessage().getText(), Commands.startCommand))) {
-            addChat(update.getMessage().getChatId());
-            reconfig();
-            LOGGER.info("Received command START from: " + update.getMessage().getFrom());
-            sendNotification("Ваш чат добавлен в рассылку", update.getMessage().getChatId());
-            forUser = true;
-        } else if ((Objects.equals(update.getMessage().getText(), Commands.update))) {
-            ConfigurationDateTime tmp = config;
-            try {
-                reconfig();
-                sendNotificationForAll("Время обновлено. Теперь уведомление придет в : "
-                        + config.getTime().getHours() + ':'
-                        + config.getTime().getMinutes()
-                        + ':' + config.getTime().getSeconds() + '\n' +
-                        "Текущее время : " + Calendar.getInstance().getTime()
-                );
-                LOGGER.info("Received command UPDATE from: " + update.getMessage().getFrom());
+        Message message = update.getMessage();
+        if (message != null) {
+            if (Objects.equals(message.getText(), Commands.cancelCommand)) {
+                removeChat(message.getChatId());
+                LOGGER.info("Received command CANCEL from: " + message.getFrom());
+                sendNotification("Ваш чат удален из рассылки", message.getChatId());
+            } else if ((Objects.equals(message.getText(), Commands.startCommand))) {
+                addChat(message.getChatId());
+                update();
+                LOGGER.info("Received command START from: " + message.getFrom());
+                sendNotification("Ваш чат добавлен в рассылку", message.getChatId());
                 forUser = true;
-            } catch (Exception ex) {
-                config = tmp;
-                LOGGER.error("On reconfig config. ", ex);
+            } else if ((Objects.equals(message.getText(), Commands.update))) {
+                Configuration tmp = config;
+                try {
+                    update();
+                    sendNotificationForAll("Время обновлено. Теперь уведомление придет в "
+                            + config.getTime().getHours() + ':'
+                            + config.getTime().getMinutes() + '\n' +
+                            "Текущее время : " + Calendar.getInstance().getTime()
+                    );
+                    LOGGER.info("Received command UPDATE from: " + message.getFrom());
+                    forUser = true;
+                } catch (Exception ex) {
+                    config = tmp;
+                    LOGGER.error("On update config. ", ex);
+                }
             }
-        } else if (update.getMessage() != null && update.getMessage().getChat().isGroupChat() || update.getMessage().getChat().isSuperGroupChat()) {
-            Long chatId = update.getMessage().getChatId();
-            addChat(chatId);
-            LOGGER.info("Try to add chat with id: " + chatId);
-        } else {
-            LOGGER.info("Something is happened: " + update);
         }
     }
 
-    private void reconfig() {
+    private void update() {
         forUser = false;
 
-        config = ConfigurationDateTime.getConfig();
+        config = Configuration.getConfig();
         if (standUp != null) {
             standUp.cancel();
         }
@@ -127,10 +124,11 @@ public class StandUpperBot extends TelegramLongPollingBot {
             @Override
             public void run() {
                 if (dayIsOk() && forUser) {
-                    sendNotificationForAll("Stand Up");
+                    sendNotificationForAll(config.getMessage());
                 }
             }
         };
+
         timer.schedule(standUp, config.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
 
     }
