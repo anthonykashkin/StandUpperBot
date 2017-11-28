@@ -10,7 +10,7 @@ buildscript {
 }
 
 group 'org.protei.sorm.bot'
-version '1.0.5'
+version '1.0.5-SNAPSHOT'
 
 apply plugin: 'java'
 apply plugin: 'com.github.johnrengelman.shadow'
@@ -24,6 +24,9 @@ dependencies {
     compile(
             //Telegram API
             [group: 'org.telegram', name: 'telegrambots', version: '3.5'],
+
+            /* Spring */
+            [group: 'org.springframework', name: 'spring-context', version: '4.3.12.RELEASE'],
 
             //Logger
             [group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.6']

@@ -1,11 +1,13 @@
 package org.protei.sorm.bot;
 
-import org.protei.sorm.bot.commands.Commands;
-import org.protei.sorm.bot.configuration.Configuration;
+import org.protei.sorm.bot.persistance.ChatManager;
+import org.protei.sorm.bot.commands.CommandHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
@@ -15,20 +17,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Calendar;
-import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 
+@Component
+@ComponentScan("org.protei.sorm.bot.standupper")
 public class StandUpperBot extends TelegramLongPollingBot {
-    public static final String CHAT_IDS_FILENAME = System.getProperty("user.home") + "/.standupper/chatIds.txt";
+    private static final String CHAT_IDS_FILENAME = System.getProperty("user.home") + "/.standupper/chatIds.txt";
     private static final Logger LOGGER = LoggerFactory.getLogger(StandUpperBot.class);
-    final static ConcurrentSkipListSet<Long> chatIds = new ConcurrentSkipListSet<>();
 
-    private static Configuration config;
+    private ChatManager chatManager;
+
+    private Props config;
+
+    private CommandHandler handler;
 
     private File chatIdsFile;
     private TimerTask standUp;
@@ -37,13 +42,17 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     private volatile Boolean forUser;
 
-    public StandUpperBot() {
+    @Autowired
+    public StandUpperBot(Config config, Handler handler) {
         super();
         initChatIdsFile();
         update();
         forUser = true;
         LOGGER.info("StandUpperBot created.");
+        this.config = config;
+        this.handler = handler;
     }
+
 
     private void initChatIdsFile() {
 
@@ -69,7 +78,7 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "org.protei.sorm.bot.StandUpperBot";
+        return "org.protei.sorm.bot.StandUpper.StandUpperBot";
     }
 
     @Override
@@ -79,41 +88,13 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        Message message = update.getMessage();
-        if (message != null) {
-            if (Objects.equals(message.getText(), Commands.cancelCommand)) {
-                removeChat(message.getChatId());
-                LOGGER.info("Received command CANCEL from: " + message.getFrom());
-                sendNotification("Ваш чат удален из рассылки", message.getChatId());
-            } else if ((Objects.equals(message.getText(), Commands.startCommand))) {
-                addChat(message.getChatId());
-                update();
-                LOGGER.info("Received command START from: " + message.getFrom());
-                sendNotification("Ваш чат добавлен в рассылку", message.getChatId());
-                forUser = true;
-            } else if ((Objects.equals(message.getText(), Commands.update))) {
-                Configuration tmp = config;
-                try {
-                    update();
-                    sendNotificationForAll("Время обновлено. Теперь уведомление придет в "
-                            + config.getTime().getHours() + ':'
-                            + config.getTime().getMinutes() + '\n' +
-                            "Текущее время : " + Calendar.getInstance().getTime()
-                    );
-                    LOGGER.info("Received command UPDATE from: " + message.getFrom());
-                    forUser = true;
-                } catch (Exception ex) {
-                    config = tmp;
-                    LOGGER.error("On update config. ", ex);
-                }
-            }
-        }
+        handler.handle(update);
     }
 
     private void update() {
         forUser = false;
 
-        config = Configuration.getConfig();
+        config = Config.getConfig();
         if (standUp != null) {
             standUp.cancel();
         }
@@ -162,11 +143,11 @@ public class StandUpperBot extends TelegramLongPollingBot {
 
     }
 
-    private void sendNotificationForAll(String text) {
+    public void sendNotificationForAll(String text) {
         chatIds.forEach(s -> sendNotification(text, s));
     }
 
-    private void sendNotification(String text, Long chatId) {
+    public void sendNotification(String text, Long chatId) {
         SendMessage sendMessage = new SendMessage();
         sendMessage.enableMarkdown(true);
         sendMessage.setChatId(chatId);

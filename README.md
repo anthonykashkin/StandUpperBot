@@ -1,4 +1,4 @@
-# org.protei.sorm.bot.StandUpperBot
+# org.protei.sorm.bot.StandUpper.StandUpperBot
 
 ## StandUpperBot
 Simple scheduler that send message to telegram in time and weekday using in properties. Can save chatIds, you can reboot it and chats will not be removed.
