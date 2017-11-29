@@ -1,57 +1,63 @@
-package org.protei.sorm.bot.configuration;
+package org.protei.sorm.bot.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+import java.util.List;
+
+@Service
 public class Props {
-
     private static final Logger logger = LoggerFactory.getLogger(Props.class);
 
-    @Value("$hours")
-    private Integer hours;
-    @Value("$minutes")
-    private Integer minutes;
-    @Value("$seconds")
-    private Integer seconds;
-    @Value("$daysOfWeek")
-    private Integer[] daysOfWeek;
-    @Value("$message")
+    @Value("${hours}")
+    private int hours;
+
+    @Value("${minutes}")
+    private int minutes;
+
+    @Value("${seconds}")
+    private int seconds;
+
+    @Value("#{'${daysOfWeek}'.split(',')}")
+    private List<Integer> daysOfWeek;
+
+    @Value("${message}")
     private String message;
-    @Value("$token")
+
+    @Value("${token}")
     private String token;
 
-    public Integer getHours() {
+    public int getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(int hours) {
         this.hours = hours;
     }
 
-    public Integer getMinutes() {
+    public int getMinutes() {
         return minutes;
     }
 
-    public void setMinutes(Integer minutes) {
+    public void setMinutes(int minutes) {
         this.minutes = minutes;
     }
 
-    public Integer getSeconds() {
+    public int getSeconds() {
         return seconds;
     }
 
-    public void setSeconds(Integer seconds) {
+    public void setSeconds(int seconds) {
         this.seconds = seconds;
     }
 
-    public Integer[] getDaysOfWeek() {
+    public List<Integer> getDaysOfWeek() {
         return daysOfWeek;
     }
 
-    public void setDaysOfWeek(Integer[] daysOfWeek) {
+    public void setDaysOfWeek(List<Integer> daysOfWeek) {
         this.daysOfWeek = daysOfWeek;
     }
 

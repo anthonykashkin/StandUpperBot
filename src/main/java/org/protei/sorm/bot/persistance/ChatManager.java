@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 
 @Component
@@ -21,10 +23,9 @@ public class ChatManager implements IChatManager {
     @Autowired(required = false)
     public ChatManager(Path pathToFile) {
         this.pathToFile = pathToFile;
+        init();
     }
 
-
-    @Override
     public void init() {
         logger.debug("Init...");
         if (!Files.exists(pathToFile)) {
@@ -38,6 +39,7 @@ public class ChatManager implements IChatManager {
 
     @Override
     public boolean addChat(Long chatId) {
+
         return chatIds.add(chatId);
         //todo write to file
     }
@@ -46,5 +48,10 @@ public class ChatManager implements IChatManager {
     public boolean removeChat(Long chatId) {
         return chatIds.remove(chatId);
         //todo remove from file
+    }
+
+    @Override
+    public Set<Long> getReceivers() {
+        return Collections.unmodifiableSet(chatIds);
     }
 }
