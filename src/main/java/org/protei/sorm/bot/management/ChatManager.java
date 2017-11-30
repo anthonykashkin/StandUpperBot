@@ -1,15 +1,12 @@
-package org.protei.sorm.bot.persistance;
+package org.protei.sorm.bot.management;
 
-import org.apache.commons.io.FileUtils;
 import org.protei.sorm.bot.config.Props;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,7 +23,7 @@ public class ChatManager implements IChatManager {
 
     private Path pathToFile;
 
-    @Autowired(required = false)
+    @Autowired
     public ChatManager(Props props) {
         this.pathToFile = Paths.get(props.getPathToChats());
         init();

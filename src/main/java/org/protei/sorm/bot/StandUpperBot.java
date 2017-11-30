@@ -1,9 +1,7 @@
 package org.protei.sorm.bot;
 
-import org.protei.sorm.bot.commands.CommandHandler;
 import org.protei.sorm.bot.commands.ICommandHandler;
 import org.protei.sorm.bot.config.Props;
-import org.protei.sorm.bot.persistance.ChatManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,15 +12,6 @@ import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
-
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Calendar;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 
 @Component

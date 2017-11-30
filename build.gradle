@@ -20,6 +20,7 @@ sourceCompatibility = 1.8
 repositories {
     mavenCentral()
 }
+
 dependencies {
     compile(
             //Telegram API
@@ -36,9 +37,12 @@ dependencies {
     )
 
     testCompile(
-            [group: 'junit', name: 'junit', version: '4.12']
-    )
+            [group: 'junit', name: 'junit', version: '4.12'],
+            [group: 'org.mockito', name: 'mockito-all', version: '1.9.5'],
+            // Spring
+            [group: 'org.springframework', name: 'spring-test', version: '4.3.12.RELEASE'],
 
+    )
 }
 
 task fatJar(type: Jar) {
@@ -46,7 +50,7 @@ task fatJar(type: Jar) {
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
     manifest {
-        attributes (
+        attributes(
                 "Built-By": "anthonykashkin",
                 'Implementation-Title': 'Stand Upper Bot',
                 'Implementation-Version': version,
@@ -61,7 +65,7 @@ shadowJar {
     manifest {
         attributes(
                 "Built-By": "anthonykashkin",
-                "Main-Class": 'org.protei.sorm.bot.Main',
+                "Main-Class": 'org.protei.sorm.bot.Application',
                 "Created-By": "gradle ${gradle.gradleVersion}, jdk ${System.getProperty("java.version")}",
                 "Specification-Title": project.name,
                 "Implementation-Title": "Stand Up Bot"

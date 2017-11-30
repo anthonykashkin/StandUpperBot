@@ -2,7 +2,7 @@ package org.protei.sorm.bot.scheduler;
 
 import org.protei.sorm.bot.StandUpperBot;
 import org.protei.sorm.bot.config.Props;
-import org.protei.sorm.bot.persistance.IChatManager;
+import org.protei.sorm.bot.management.IChatManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;

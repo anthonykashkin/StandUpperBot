@@ -1,4 +1,4 @@
-package org.protei.sorm.bot.persistance;
+package org.protei.sorm.bot.management;
 
 import java.util.Set;
 

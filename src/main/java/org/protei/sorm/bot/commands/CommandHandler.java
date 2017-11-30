@@ -1,16 +1,13 @@
 package org.protei.sorm.bot.commands;
 
 import org.protei.sorm.bot.StandUpperBot;
-import org.protei.sorm.bot.config.Props;
-import org.protei.sorm.bot.persistance.ChatManager;
-import org.protei.sorm.bot.persistance.IChatManager;
+import org.protei.sorm.bot.management.IChatManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.api.objects.Message;
 
-import java.util.Calendar;
 import java.util.Objects;
 
 @Component
@@ -26,9 +23,9 @@ public class CommandHandler implements ICommandHandler {
         this.chatManager = chatManager;
     }
 
+
     @Override
     public void handle(Message message) {
-
         if (Objects.equals(message.getText(), ICommandHandler.cancelCommand)) {
             LOGGER.info("Received command CANCEL from: " + message.getFrom());
             cancel(message.getChatId());
@@ -49,9 +46,13 @@ public class CommandHandler implements ICommandHandler {
     }
 
     private void start(Long chatId) {
-        chatManager.addChat(chatId);
-        //todo standUpperBot.update();
-        standUpperBot.sendNotification("Ваш чат добавлен в рассылку.", chatId);
+        boolean isExist = chatManager.addChat(chatId);
+        if (isExist) {
+            standUpperBot.sendNotification("Ваш чат уже добавлен. ", chatId);
+        } else {
+            //todo standUpperBot.update();
+            standUpperBot.sendNotification("Ваш чат добавлен в рассылку.", chatId);
+        }
     }
 
     @Deprecated
