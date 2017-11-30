@@ -20,14 +20,25 @@ public class Props {
     @Value("${seconds}")
     private int seconds;
 
-    @Value("#{'${daysOfWeek}'.split(',')}")
-    private List<Integer> daysOfWeek;
+    @Value("${daysOfWeek}")
+    private String daysOfWeek;
 
     @Value("${message}")
     private String message;
 
     @Value("${token}")
     private String token;
+
+    @Value("${pathToChatIds}")
+    private String pathToChats;
+
+    public String getPathToChats() {
+        return pathToChats;
+    }
+
+    public void setPathToChats(String pathToChats) {
+        this.pathToChats = pathToChats;
+    }
 
     public int getHours() {
         return hours;
@@ -53,11 +64,11 @@ public class Props {
         this.seconds = seconds;
     }
 
-    public List<Integer> getDaysOfWeek() {
+    public String getDaysOfWeek() {
         return daysOfWeek;
     }
 
-    public void setDaysOfWeek(List<Integer> daysOfWeek) {
+    public void setDaysOfWeek(String daysOfWeek) {
         this.daysOfWeek = daysOfWeek;
     }
 

@@ -25,8 +25,11 @@ dependencies {
             //Telegram API
             [group: 'org.telegram', name: 'telegrambots', version: '3.5'],
 
-            /* Spring */
+            // Spring
             [group: 'org.springframework', name: 'spring-context', version: '4.3.12.RELEASE'],
+
+            //Quartz
+            [group: 'org.quartz-scheduler', name: 'quartz', version: '1.8.6'],
 
             //Logger
             [group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.6']

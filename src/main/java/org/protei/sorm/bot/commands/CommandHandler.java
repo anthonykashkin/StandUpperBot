@@ -19,13 +19,11 @@ public class CommandHandler implements ICommandHandler {
 
     private final StandUpperBot standUpperBot;
     private final IChatManager chatManager;
-    private final Props props;
 
     @Autowired
-    public CommandHandler(StandUpperBot standUpperBot, IChatManager chatManager, Props props) {
+    public CommandHandler(StandUpperBot standUpperBot, IChatManager chatManager) {
         this.standUpperBot = standUpperBot;
         this.chatManager = chatManager;
-        this.props = props;
     }
 
     @Override
@@ -46,23 +44,27 @@ public class CommandHandler implements ICommandHandler {
 
     private void cancel(Long chatId) {
         if (chatManager.removeChat(chatId)) {
-            standUpperBot.sendNotification("Ваш чат удален из рассылки", chatId);
+            standUpperBot.sendNotification("Ваш чат удален из рассылки.", chatId);
         }
     }
 
     private void start(Long chatId) {
         chatManager.addChat(chatId);
         //todo standUpperBot.update();
-        standUpperBot.sendNotification("Ваш чат добавлен в рассылку", chatId);
+        standUpperBot.sendNotification("Ваш чат добавлен в рассылку.", chatId);
     }
 
+    @Deprecated
     private void update() {
-        //todo standUpperBot.update();
+        chatManager.getReceivers()
+                .forEach(c -> standUpperBot.sendNotification("Команда UPDATE пока не поддерживается.", c));
+        /* todo standUpperBot.update();
         chatManager.getReceivers()
                 .forEach(c -> standUpperBot.sendNotification("Время обновлено. Теперь уведомление придет в "
                         + props.getHours() + ':'
                         + props.getMinutes() + '\n' +
                         "Текущее время : " + Calendar.getInstance().getTime(), c)
                 );
+                */
     }
 }

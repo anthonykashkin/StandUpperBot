@@ -8,6 +8,7 @@ public interface ICommandHandler {
 
     String cancelCommand = "/standup_cancel";
 
+    @Deprecated
     String update = "/standup_update";
 
     void handle(Message message);

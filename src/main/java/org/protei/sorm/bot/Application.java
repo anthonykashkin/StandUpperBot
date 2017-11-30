@@ -5,9 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.telegram.telegrambots.ApiContextInitializer;
 import org.telegram.telegrambots.TelegramBotsApi;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
+
 
 public class Application {
     private static final Logger LOGGER = LoggerFactory.getLogger(Application.class);
