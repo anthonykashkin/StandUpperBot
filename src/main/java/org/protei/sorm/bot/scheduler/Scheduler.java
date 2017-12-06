@@ -21,7 +21,8 @@ public class Scheduler {
         this.props = props;
     }
 
-    @Scheduled(cron = "0 45 12 * * TUE-FRI")
+    //
+    @Scheduled(cron = "${timeToMessage}")
     public void standUp() {
         chatManager.getReceivers()
                 .forEach(c ->
@@ -29,7 +30,7 @@ public class Scheduler {
                 );
     }
 
-    //TODO add trigger for update time
+    /*TODO add trigger for update time
     private String cronConfig() {
         final char SPACE = ' ';
         StringBuilder cronBuilder = new StringBuilder();
@@ -46,6 +47,6 @@ public class Scheduler {
             cronBuilder.append(daysOfWeek);
         }
         return cronBuilder.toString();
-    }
+    }*/
 
 }

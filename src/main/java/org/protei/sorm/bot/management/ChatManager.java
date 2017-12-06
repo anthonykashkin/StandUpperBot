@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,10 +27,15 @@ public class ChatManager implements IChatManager {
 
     @Autowired
     public ChatManager(Props props) {
-        this.pathToFile = Paths.get(props.getPathToChats());
-        init();
+        String pathToChats = props.getPathToChats();
+        if (pathToChats == null || pathToChats.isEmpty()) {
+            this.pathToFile = null;
+        } else {
+            this.pathToFile = Paths.get(pathToChats);
+        }
     }
 
+    @PostConstruct
     private void init() {
         logger.debug("Init...");
 
