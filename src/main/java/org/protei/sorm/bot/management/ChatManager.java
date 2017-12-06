@@ -14,6 +14,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.stream.Stream;
 
 @Component
 public class ChatManager implements IChatManager {
@@ -38,10 +39,19 @@ public class ChatManager implements IChatManager {
 
         if (!Files.exists(pathToFile)) {
             try {
+                Files.createDirectories(pathToFile.getParent());
                 Files.createFile(pathToFile);
                 logger.debug("File was created.");
             } catch (IOException e) {
                 logger.error("Initialization failed. ", e);
+            }
+        } else {
+            try (Stream<String> lines = Files.lines(pathToFile)) {
+                lines.filter(s -> !s.isEmpty())
+                        .map(Long::parseLong)
+                        .forEach(chatIds::add);
+            } catch (IOException e) {
+                logger.error("File read error. ", e);
             }
         }
 
@@ -56,8 +66,8 @@ public class ChatManager implements IChatManager {
         }
         if (Files.exists(pathToFile)) {
             try {
-                Files.write(pathToFile, String.valueOf(chatId).getBytes(), StandardOpenOption.APPEND);
-            }catch (IOException io) {
+                Files.write(pathToFile, ("\n" + String.valueOf(chatId)).getBytes(), StandardOpenOption.APPEND);
+            } catch (IOException io) {
                 logger.error("Can`t write chat to file. Recommend do it manually.", io);
             }
         }
@@ -69,7 +79,7 @@ public class ChatManager implements IChatManager {
         if (Files.exists(pathToFile)) {
             try {
                 String content = new String(Files.readAllBytes(pathToFile));
-                content = content.replaceAll(String.valueOf(chatId), "");
+                content = content.replaceAll("\n" + String.valueOf(chatId), "");
                 Files.write(pathToFile, content.getBytes());
             } catch (IOException io) {
                 logger.warn("Can`t remove chat from file. Recommend do it manually.", io);

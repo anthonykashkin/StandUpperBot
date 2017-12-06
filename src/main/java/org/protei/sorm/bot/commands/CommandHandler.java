@@ -8,21 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.api.objects.Message;
 
+import javax.annotation.PostConstruct;
 import java.util.Objects;
 
 @Component
 public class CommandHandler implements ICommandHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
 
-    private final StandUpperBot standUpperBot;
-    private final IChatManager chatManager;
-
     @Autowired
-    public CommandHandler(StandUpperBot standUpperBot, IChatManager chatManager) {
-        this.standUpperBot = standUpperBot;
-        this.chatManager = chatManager;
-    }
-
+    private StandUpperBot standUpperBot;
+    @Autowired
+    private IChatManager chatManager;
 
     @Override
     public void handle(Message message) {
@@ -46,11 +42,10 @@ public class CommandHandler implements ICommandHandler {
     }
 
     private void start(Long chatId) {
-        boolean isExist = chatManager.addChat(chatId);
+        boolean isExist = !chatManager.addChat(chatId);
         if (isExist) {
             standUpperBot.sendNotification("Ваш чат уже добавлен. ", chatId);
         } else {
-            //todo standUpperBot.update();
             standUpperBot.sendNotification("Ваш чат добавлен в рассылку.", chatId);
         }
     }
@@ -59,7 +54,7 @@ public class CommandHandler implements ICommandHandler {
     private void update() {
         chatManager.getReceivers()
                 .forEach(c -> standUpperBot.sendNotification("Команда UPDATE пока не поддерживается.", c));
-        /* todo standUpperBot.update();
+        /*
         chatManager.getReceivers()
                 .forEach(c -> standUpperBot.sendNotification("Время обновлено. Теперь уведомление придет в "
                         + props.getHours() + ':'
@@ -67,5 +62,9 @@ public class CommandHandler implements ICommandHandler {
                         "Текущее время : " + Calendar.getInstance().getTime(), c)
                 );
                 */
+    }
+
+    public void setStandUpperBot(StandUpperBot standUpperBot) {
+        this.standUpperBot = standUpperBot;
     }
 }

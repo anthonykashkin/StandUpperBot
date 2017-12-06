@@ -27,8 +27,6 @@ public class Props {
     @Value("${pathToChatIds}")
     private String pathToChatIds;
 
-    //private CronExpression cronExpression;
-
     public String getPathToChats() {
         return pathToChatIds;
     }

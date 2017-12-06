@@ -1,5 +1,6 @@
 package org.protei.sorm.bot.commands;
 
+import org.protei.sorm.bot.StandUpperBot;
 import org.telegram.telegrambots.api.objects.Message;
 
 public interface ICommandHandler {
@@ -13,4 +14,5 @@ public interface ICommandHandler {
 
     void handle(Message message);
 
+    void setStandUpperBot(StandUpperBot standUpperBot);
 }

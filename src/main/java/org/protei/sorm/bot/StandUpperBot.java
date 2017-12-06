@@ -13,6 +13,8 @@ import org.telegram.telegrambots.api.objects.Update;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 
+import javax.annotation.PostConstruct;
+
 
 @Component
 @ComponentScan("org.protei.sorm.bot.standupper")
@@ -20,14 +22,20 @@ public class StandUpperBot extends TelegramLongPollingBot {
     private static final Logger LOGGER = LoggerFactory.getLogger(StandUpperBot.class);
 
     private final Props props;
-    private final ICommandHandler handler;
 
     @Autowired
-    public StandUpperBot(Props props, ICommandHandler handler) {
+    private ICommandHandler handler;
+
+    @Autowired
+    public StandUpperBot(Props props) {
         super();
         this.props = props;
-        this.handler = handler;
         LOGGER.info("StandUpperBot created.");
+    }
+
+    @PostConstruct
+    public void init() {
+           handler.setStandUpperBot(this);
     }
 
     @Override
